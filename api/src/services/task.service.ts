@@ -8,14 +8,14 @@ import { AmqpService } from './amqp.service';
 @Injectable()
 export class TaskService {
   private readonly logger = new Logger(TaskService.name);
-  
+
   constructor(
     @InjectRepository(Task)
     private readonly repo: Repository<Task>,
     private amqpService: AmqpService,
-  ) {}
+  ) { }
 
-  async create(dto: CreateTaskDto) {
+  async createTask(dto: CreateTaskDto) {
     const task = this.repo.create({ ...dto, status: 'pending' });
     const saved = await this.repo.save(task);
 
@@ -25,11 +25,11 @@ export class TaskService {
     return saved;
   }
 
-  async findOne(id: string) {
+  async getTask(id: string) {
     return this.repo.findOneBy({ id });
   }
 
-  async findAll(page: number, limit: number) {
+  async getTasks(page: number, limit: number) {
     const [tasks, total] = await this.repo.findAndCount({
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
