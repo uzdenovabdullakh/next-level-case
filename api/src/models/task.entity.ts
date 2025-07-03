@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
-@Entity()
+@Entity("tasks")
 export class Task {
   @PrimaryGeneratedColumn('uuid')
   @ApiProperty()
@@ -23,15 +23,15 @@ export class Task {
   @ApiProperty()
   priority: 'high' | 'medium' | 'low';
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: "created_at" })
   @ApiProperty()
   createdAt: Date;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: "started_at" })
   @ApiProperty()
   startedAt: Date;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: "completed_at" })
   @ApiProperty()
   completedAt: Date;
 }
