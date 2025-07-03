@@ -1,10 +1,24 @@
 import { config } from './config';
 import { pool } from './db';
 
-export const processTask = async (task: any) => {
+interface MessageContent {
+  pattern: string
+  data: {
+    id: string,
+    title: string,
+    description: string,
+    status: 'pending' | 'processing' | 'completed' | 'failed',
+    priority: 'high' | 'medium' | 'low',
+    createdAt: Date,
+    startedAt: Date | null,
+    completedAt: Date | null
+  }
+}
+
+export const processTask = async (content: MessageContent) => {
   const client = await pool.connect();
   try {
-    const { id } = task;
+    const { id } = content.data;
 
     await client.query('BEGIN');
 
