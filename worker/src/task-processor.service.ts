@@ -20,7 +20,7 @@ export class TaskProcessorService {
     task.startedAt = new Date();
     await this.taskRepo.save(task);
 
-    const timeout = this.configService.get<number>('WORKER_TIMEOUT');
+    const timeout = this.configService.get<number>('WORKER_TIMEOUT') || 600_000;
 
     await new Promise<void>((resolve, reject) => {
       setTimeout(async () => {
