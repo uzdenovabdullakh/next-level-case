@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  RABBITMQ_QUEUE_NAME: "tasks"
+  WORKER_TIMEOUT: "600000"
+  MAX_RETRIES: "3"
