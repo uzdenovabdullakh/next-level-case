@@ -4,6 +4,7 @@ import { Task } from './task.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { WorkerService } from './worker.service';
 import { TaskProcessorService } from './task-processor.service';
+import { WinstonLoggerService } from './logger.service';
 
 @Module({
   imports: [
@@ -20,6 +21,9 @@ import { TaskProcessorService } from './task-processor.service';
     }),
     TypeOrmModule.forFeature([Task]),
   ],
-  providers: [WorkerService, TaskProcessorService],
+  providers: [WorkerService, TaskProcessorService, {
+    provide: 'LOGGER',
+    useClass: WinstonLoggerService,
+  },],
 })
-export class AppModule {}
+export class AppModule { }
