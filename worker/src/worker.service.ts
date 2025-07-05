@@ -1,8 +1,9 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { connect, Channel, Connection, ChannelModel } from 'amqplib';
+import { Injectable, OnModuleDestroy, Inject } from '@nestjs/common';
+import { connect, Channel, ChannelModel } from 'amqplib';
 import { TaskProcessorService } from './task-processor.service';
 import { ConfigService } from '@nestjs/config';
 import { Task } from './task.entity';
+import { WinstonLoggerService } from './logger.service';
 
 interface MessageContent<T> {
   pattern: string
@@ -14,7 +15,11 @@ export class WorkerService implements OnModuleDestroy {
   private conn: ChannelModel;
   private channel: Channel;
 
-  constructor(private readonly processor: TaskProcessorService, private configService: ConfigService) { }
+  constructor(
+    private readonly processor: TaskProcessorService,
+    private configService: ConfigService,
+    @Inject('LOGGER') private readonly logger: WinstonLoggerService
+  ) { }
 
   async onModuleInit() {
     const queue = this.configService.get<string>('RABBITMQ_QUEUE_NAME') || 'tasks';
@@ -23,7 +28,7 @@ export class WorkerService implements OnModuleDestroy {
     this.channel = await this.conn.createChannel();
     await this.channel.assertQueue(queue, { durable: true });
 
-    console.log(`Waiting for messages in ${queue}. To exit press CTRL+C`);
+    this.logger.log({ message: 'Waiting for messages', queue }, WorkerService.name);
 
     this.channel.consume(
       queue,
@@ -31,13 +36,19 @@ export class WorkerService implements OnModuleDestroy {
         if (msg) {
           const { data: task }: MessageContent<Task> = JSON.parse(msg.content.toString());
 
-          console.log(`Received task: ${task.id}`);
+          this.logger.log({ message: 'Received task', taskId: task.id }, WorkerService.name);
 
           try {
             await this.processor.process(task.id);
             this.channel.ack(msg);
+
+            this.logger.log({ message: 'Task processed successfully', taskId: task.id }, WorkerService.name);
           } catch (error) {
-            console.error(`Failed to process task ${task.id}:`, error);
+            this.logger.error(
+              { message: 'Failed to process task', taskId: task.id, error: error.message },
+              error.stack,
+              WorkerService.name,
+            );
 
             this.channel.nack(msg, false, false); // не повторять, отбросить
           }
@@ -50,6 +61,6 @@ export class WorkerService implements OnModuleDestroy {
   async onModuleDestroy() {
     await this.channel?.close();
     await this.conn?.close();
-    console.log('Worker gracefully shut down');
+    this.logger.log({ message: 'Worker gracefully shut down' }, WorkerService.name);
   }
 }
