@@ -5,6 +5,7 @@ import { TasksModule } from './modules/tasks.module';
 import { Task } from './models/task.entity';
 import { HealthModule } from './modules/health.module';
 import { AmqpModule } from './modules/amqp.module';
+import { WinstonLoggerService } from './services/logger.service';
 
 @Module({
   imports: [
@@ -22,6 +23,12 @@ import { AmqpModule } from './modules/amqp.module';
     TasksModule,
     HealthModule,
     AmqpModule
+  ],
+  providers: [
+    {
+      provide: 'LOGGER',
+      useClass: WinstonLoggerService,
+    },
   ],
 })
 export class AppModule {}
